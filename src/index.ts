@@ -17,6 +17,10 @@ export { OpenAIAdapter } from "./llm/openai.js";
 export { OllamaAdapter } from "./llm/ollama.js";
 export { OpenAICompatibleAdapter } from "./llm/openai-compatible.js";
 
+export { EventChannel } from "./event-channel.js";
+export { InMemoryStore } from "./store/memory-store.js";
+export type { SessionSnapshot, PendingPrompt, ConversationStore, MemoryItem, MemoryStore } from "./store/types.js";
+
 export { FlowError, CompileError, RuntimeError, ToolError } from "./errors.js";
 export { END } from "./types.js";
 

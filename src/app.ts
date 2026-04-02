@@ -6,6 +6,7 @@ import { runConversation } from "./runtime.js";
 import { FlowBuilder } from "./flow.js";
 import { AdapterRegistry } from "./llm/registry.js";
 import { SystemPromptBuilder } from "./llm/prompts.js";
+import { Conversation } from "./conversation.js";
 
 interface FlowPilotConfig {
   flows: FlowBuilder<any>[];
@@ -53,6 +54,20 @@ export class FlowPilotApp {
     }
     const sid = sessionId ?? `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     return runConversation(compiled, sid, undefined, {
+      adapterRegistry: this.registry.list().length > 0 ? this.registry : undefined,
+      systemPromptBuilder: this.globalSystemPrompt
+        ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
+        : undefined,
+    });
+  }
+
+  createConversation(flowName: string, sessionId?: string): Conversation {
+    const compiled = this.flows.get(flowName);
+    if (!compiled) throw new Error(`Flow "${flowName}" not found. Available: ${[...this.flows.keys()].join(", ")}`);
+    const sid = sessionId ?? `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    return new Conversation({
+      compiled,
+      sessionId: sid,
       adapterRegistry: this.registry.list().length > 0 ? this.registry : undefined,
       systemPromptBuilder: this.globalSystemPrompt
         ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
