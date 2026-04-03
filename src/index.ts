@@ -26,6 +26,14 @@ export { RestApiAdapter } from "./channels/rest-api.js";
 export { WebChatAdapter } from "./channels/webchat.js";
 export type { InboundMessage, OutboundMessage, ChannelCapabilities, ChannelAdapter, ChannelHandler } from "./channels/types.js";
 
+export { HookRunner } from "./hooks/runner.js";
+export { piiGuard } from "./guardrails/pii-guard.js";
+export { rateLimiter } from "./guardrails/rate-limiter.js";
+export { TokenCounter } from "./tokens/counter.js";
+export { ResultLimiter } from "./tokens/result-limiter.js";
+export { ContextCompactor } from "./tokens/compactor.js";
+export { TokenManager } from "./tokens/manager.js";
+
 export { FlowError, CompileError, RuntimeError, ToolError } from "./errors.js";
 export { END } from "./types.js";
 
