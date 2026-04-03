@@ -1,0 +1,28 @@
+{
+  "name": "@flowpilot/analytics",
+  "version": "0.1.0",
+  "description": "Conversational analytics engine for FlowPilot — funnels, bottlenecks, cost tracking",
+  "type": "module",
+  "main": "dist/engine.js",
+  "types": "dist/engine.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/engine.d.ts",
+      "import": "./dist/engine.js",
+      "default": "./dist/engine.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2",
+    "vitest": "^2.1.9"
+  }
+}

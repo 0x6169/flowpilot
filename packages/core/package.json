@@ -1,0 +1,37 @@
+{
+  "name": "@flowpilot/core",
+  "version": "0.1.0",
+  "description": "TypeScript framework for production-grade conversational chatbots",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "openai": "^6.33.0",
+    "ws": "^8.20.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "@types/ws": "^8.18.1",
+    "typescript": "^6.0.2",
+    "vitest": "^2.1.9"
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { AnalyticsEngine } from "../../src/analytics/engine.js";
-import type { AnalyticsEvent } from "../../src/analytics/types.js";
+import { AnalyticsEngine } from "../src/engine.js";
+import type { AnalyticsEvent } from "../src/types.js";
 
 describe("AnalyticsEngine", () => {
   let engine: AnalyticsEngine;

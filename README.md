@@ -16,11 +16,11 @@ Build customer service and sales chatbots with structured flows, LLM fallback, a
 ## Quick Start
 
 ```bash
-npm install flowpilot
+npm install @flowpilot/core
 ```
 
 ```typescript
-import { createFlowPilot, flow } from "flowpilot"
+import { createFlowPilot, flow } from "@flowpilot/core"
 import { z } from "zod"
 
 const support = flow("support", {
@@ -102,7 +102,7 @@ const vendas = flow("vendas", {
 ### LLM Adapters
 
 ```typescript
-import { AnthropicAdapter, OpenAIAdapter, OllamaAdapter } from "flowpilot"
+import { AnthropicAdapter, OpenAIAdapter, OllamaAdapter } from "@flowpilot/core"
 
 const app = createFlowPilot({
   flows: [myFlow],
@@ -119,7 +119,7 @@ const app = createFlowPilot({
 **Fallback chain** — if one provider is down, the next picks up automatically:
 
 ```typescript
-import { FallbackChain } from "flowpilot"
+import { FallbackChain } from "@flowpilot/core"
 
 const chain = new FallbackChain({
   registry,
@@ -139,7 +139,7 @@ const app = createFlowPilot({ flows: [myFlow], api: { port: 3000 } })
 await app.listen()
 
 // WebSocket
-import { WebChatAdapter } from "flowpilot"
+import { WebChatAdapter } from "@flowpilot/core"
 const webchat = new WebChatAdapter({ port: 3001, sessionManager, defaultFlow: "support" })
 await webchat.start()
 ```
@@ -155,7 +155,7 @@ await webchat.start()
 ### Guardrails
 
 ```typescript
-import { piiGuard, rateLimiter } from "flowpilot"
+import { piiGuard, rateLimiter } from "@flowpilot/core"
 
 const app = createFlowPilot({
   flows: [myFlow],
@@ -210,7 +210,7 @@ const costs = engine.costBreakdown("vendas")
 ### Testing
 
 ```typescript
-import { simulate } from "flowpilot"
+import { simulate } from "@flowpilot/core"
 
 const result = await simulate(vendas)
   .user("I want to buy something")
@@ -229,7 +229,7 @@ expect(result.errors).toHaveLength(0)
 ### Token Efficiency
 
 ```typescript
-import { TokenManager, ContextCompactor, ResultLimiter } from "flowpilot"
+import { TokenManager, ContextCompactor, ResultLimiter } from "@flowpilot/core"
 
 // Budget tracking
 const tm = new TokenManager({
@@ -271,9 +271,17 @@ Developer API  →  Flow Compiler  →  Flow Runtime (async generator)
 | Google Gemini via Ollama (1M context) | Any OpenAI-compatible endpoint |
 | Ollama (local, zero cost) | |
 
+## Packages
+
+| Package | Description | License |
+|---------|-------------|---------|
+| [`@flowpilot/core`](packages/core/) | Framework core — runtime, adapters, channels, tools, hooks | Apache 2.0 |
+| [`@flowpilot/analytics`](packages/analytics/) | Conversational analytics — funnels, bottlenecks, cost tracking | FSL-1.1-Apache-2.0 |
+
 ## License
 
-Core framework: [Apache 2.0](LICENSE)
+- **Core** (`@flowpilot/core`): [Apache 2.0](packages/core/LICENSE)
+- **Analytics** (`@flowpilot/analytics`): [FSL 1.1](packages/analytics/LICENSE) — converts to Apache 2.0 on 2028-04-02
 
 ---
 
