@@ -13,7 +13,8 @@ import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
 
 export interface ConversationConfig {
-  compiled: CompiledFlow;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
+  compiled: CompiledFlow<any>;
   sessionId: string;
   store?: ConversationStore;
   adapterRegistry?: AdapterRegistry;
@@ -29,12 +30,14 @@ export type ConversationStatus =
   | "error";
 
 export class Conversation {
-  private readonly compiled: CompiledFlow;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
+  private readonly compiled: CompiledFlow<any>;
   private readonly sessionId: string;
   private readonly store?: ConversationStore;
   private readonly adapterRegistry?: AdapterRegistry;
   private readonly systemPromptBuilder?: SystemPromptBuilder;
-  private readonly stateManager: StateManager<Record<string, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
+  private readonly stateManager: StateManager<any>;
   private readonly eventChannel: EventChannel<FlowEvent>;
 
   private state: Record<string, unknown>;
@@ -57,7 +60,8 @@ export class Conversation {
 
     this.stateManager = new StateManager(
       config.compiled.stateSchema,
-      config.compiled.reducers as Partial<Record<string, (current: unknown, update: unknown) => unknown>>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure at generic boundary
+      config.compiled.reducers as any,
     );
     this.state = this.stateManager.apply(
       this.stateManager.getInitialState(),

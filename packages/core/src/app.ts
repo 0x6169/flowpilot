@@ -12,7 +12,8 @@ import { SessionManager } from "./channels/session-manager.js";
 import { RestApiAdapter } from "./channels/rest-api.js";
 
 interface FlowPilotConfig {
-  flows: FlowBuilder<Record<string, unknown>>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: accepts any flow state schema
+  flows: FlowBuilder<any>[];
   tools?: ToolDefinition[];
   adapters?: LLMAdapter[];
   defaultModel?: string;

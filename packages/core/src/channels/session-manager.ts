@@ -5,7 +5,8 @@ import type { ConversationStore } from "../store/types.js";
 import { Conversation } from "../conversation.js";
 
 export interface SessionManagerConfig {
-  compiledFlows: Map<string, CompiledFlow>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: holds flows with any state schema
+  compiledFlows: Map<string, CompiledFlow<any>>;
   adapterRegistry?: AdapterRegistry;
   systemPromptBuilder?: SystemPromptBuilder;
   store?: ConversationStore;
