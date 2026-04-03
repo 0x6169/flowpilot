@@ -12,6 +12,9 @@
       "default": "./dist/index.js"
     }
   },
+  "bin": {
+    "flowpilot": "dist/cli/bin.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
