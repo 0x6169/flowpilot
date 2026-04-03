@@ -4,7 +4,7 @@ export { runConversation } from "./runtime.js";
 export { createFlowPilot, FlowPilotApp } from "./app.js";
 export { ConversationContextImpl } from "./context.js";
 export { Conversation } from "./conversation.js";
-export type { ConversationConfig, ConversationStatus } from "./conversation.js";
+export type { ConversationConfig, ConversationStatus, ContextCompactionConfig } from "./conversation.js";
 export { StateManager } from "./state.js";
 export { defineTool } from "./tools/define.js";
 export { ToolExecutor } from "./tools/executor.js";
@@ -34,6 +34,7 @@ export { TokenCounter } from "./tokens/counter.js";
 export { ResultLimiter } from "./tokens/result-limiter.js";
 export { ContextCompactor } from "./tokens/compactor.js";
 export { TokenManager } from "./tokens/manager.js";
+export type { TokenManagerOptions, BudgetConfig, CompactionConfig } from "./tokens/manager.js";
 
 export { FlowError, CompileError, RuntimeError, ToolError } from "./errors.js";
 export { END } from "./types.js";
