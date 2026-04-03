@@ -72,4 +72,15 @@ export type {
   ToolCallResult,
 } from "./tools/types.js";
 
+// Analytics
+export { AnalyticsEngine } from "./analytics/engine.js";
+export type { FunnelResult, FunnelStep, BottleneckResult, CostBreakdown, AnalyticsEvent } from "./analytics/types.js";
+
+// Testing
+export { simulate } from "./testing/simulate.js";
+export type { SimulationResult } from "./testing/types.js";
+
+// CLI
+export { parseArgs, formatHelp } from "./cli/index.js";
+
 export const VERSION = "0.1.0";
