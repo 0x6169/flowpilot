@@ -38,9 +38,9 @@ describe("OpenAIAdapter", () => {
     const adapter = new OpenAIAdapter({ apiKey: process.env.OPENAI_API_KEY! });
     const result = await adapter.complete({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: "Say exactly: HELLO_FLOWPILOT" }],
+      messages: [{ role: "user", content: "Say exactly: HELLO_TALKGRAPH" }],
       maxTokens: 50,
     });
-    expect(result.content).toContain("HELLO_FLOWPILOT");
+    expect(result.content).toContain("HELLO_TALKGRAPH");
   });
 });

@@ -1,7 +1,7 @@
 {
-  "name": "@flowpilot/analytics",
+  "name": "@talkgraph/analytics",
   "version": "0.1.0",
-  "description": "Conversational analytics engine for FlowPilot — funnels, bottlenecks, cost tracking",
+  "description": "Conversational analytics engine for TalkGraph — funnels, bottlenecks, cost tracking",
   "type": "module",
   "main": "dist/engine.js",
   "types": "dist/engine.d.ts",

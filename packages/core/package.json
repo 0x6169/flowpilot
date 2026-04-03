@@ -1,5 +1,5 @@
 {
-  "name": "@flowpilot/core",
+  "name": "@talkgraph/core",
   "version": "0.1.0",
   "description": "TypeScript framework for production-grade conversational chatbots",
   "type": "module",
@@ -13,7 +13,7 @@
     }
   },
   "bin": {
-    "flowpilot": "dist/cli/bin.js"
+    "talkgraph": "dist/cli/bin.js"
   },
   "scripts": {
     "build": "tsc",

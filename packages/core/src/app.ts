@@ -13,7 +13,7 @@ import { Conversation } from "./conversation.js";
 import { SessionManager } from "./channels/session-manager.js";
 import { RestApiAdapter } from "./channels/rest-api.js";
 
-interface FlowPilotConfig {
+interface TalkGraphConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: accepts any flow state schema
   flows: FlowBuilder<any>[];
   tools?: ToolDefinition[];
@@ -27,15 +27,15 @@ interface FlowPilotConfig {
   hooks?: HookDefinition[];
 }
 
-export class FlowPilotApp {
+export class TalkGraphApp {
   private readonly flows: Map<string, ReturnType<typeof compile>>;
   private readonly tools: Map<string, ToolDefinition>;
   private readonly registry: AdapterRegistry;
   private readonly globalSystemPrompt?: string;
-  private readonly config_: FlowPilotConfig;
+  private readonly config_: TalkGraphConfig;
   private readonly store_?: ConversationStore;
 
-  constructor(config: FlowPilotConfig) {
+  constructor(config: TalkGraphConfig) {
     this.config_ = config;
     this.store_ = config.store;
     this.flows = new Map();
@@ -127,6 +127,6 @@ export class FlowPilotApp {
   }
 }
 
-export function createFlowPilot(config: FlowPilotConfig): FlowPilotApp {
-  return new FlowPilotApp(config);
+export function createTalkGraph(config: TalkGraphConfig): TalkGraphApp {
+  return new TalkGraphApp(config);
 }

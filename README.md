@@ -1,10 +1,10 @@
-# FlowPilot
+# TalkGraph
 
 **TypeScript framework for production-grade conversational chatbots.**
 
 Build customer service and sales chatbots with structured flows, LLM fallback, and zero infrastructure overhead. Define flows in code, get streaming events, multi-turn conversations, slot filling with validation, and built-in analytics out of the box.
 
-## Why FlowPilot
+## Why TalkGraph
 
 - **Code-first** — Define flows in TypeScript with full type safety. No YAML, no config files, no graph DSL.
 - **Streaming-native** — Everything is an async generator yielding typed events. No polling, no callbacks.
@@ -16,11 +16,11 @@ Build customer service and sales chatbots with structured flows, LLM fallback, a
 ## Quick Start
 
 ```bash
-npm install @flowpilot/core
+npm install @talkgraph/core
 ```
 
 ```typescript
-import { createFlowPilot, flow } from "@flowpilot/core"
+import { createTalkGraph, flow } from "@talkgraph/core"
 import { z } from "zod"
 
 const support = flow("support", {
@@ -46,7 +46,7 @@ const support = flow("support", {
   .edge("greeting", "collect_issue")
   .edge("collect_issue", "resolve")
 
-const app = createFlowPilot({
+const app = createTalkGraph({
   flows: [support],
   api: { port: 3000 },
 })
@@ -102,9 +102,9 @@ const vendas = flow("vendas", {
 ### LLM Adapters
 
 ```typescript
-import { AnthropicAdapter, OpenAIAdapter, OllamaAdapter } from "@flowpilot/core"
+import { AnthropicAdapter, OpenAIAdapter, OllamaAdapter } from "@talkgraph/core"
 
-const app = createFlowPilot({
+const app = createTalkGraph({
   flows: [myFlow],
   adapters: [
     new AnthropicAdapter({ apiKey: process.env.ANTHROPIC_API_KEY }),
@@ -119,7 +119,7 @@ const app = createFlowPilot({
 **Fallback chain** — if one provider is down, the next picks up automatically:
 
 ```typescript
-import { FallbackChain } from "@flowpilot/core"
+import { FallbackChain } from "@talkgraph/core"
 
 const chain = new FallbackChain({
   registry,
@@ -135,11 +135,11 @@ const chain = new FallbackChain({
 
 ```typescript
 // REST API (built-in)
-const app = createFlowPilot({ flows: [myFlow], api: { port: 3000 } })
+const app = createTalkGraph({ flows: [myFlow], api: { port: 3000 } })
 await app.listen()
 
 // WebSocket
-import { WebChatAdapter } from "@flowpilot/core"
+import { WebChatAdapter } from "@talkgraph/core"
 const webchat = new WebChatAdapter({ port: 3001, sessionManager, defaultFlow: "support" })
 await webchat.start()
 ```
@@ -155,9 +155,9 @@ await webchat.start()
 ### Guardrails
 
 ```typescript
-import { piiGuard, rateLimiter } from "@flowpilot/core"
+import { piiGuard, rateLimiter } from "@talkgraph/core"
 
-const app = createFlowPilot({
+const app = createTalkGraph({
   flows: [myFlow],
   hooks: [
     piiGuard({
@@ -177,7 +177,7 @@ const app = createFlowPilot({
 ### Hooks
 
 ```typescript
-const app = createFlowPilot({
+const app = createTalkGraph({
   hooks: [
     { on: "before:node", handler: async (ctx) => { /* log, validate, redirect */ } },
     { on: "after:llm", handler: async (ctx) => { /* filter, modify response */ } },
@@ -210,7 +210,7 @@ const costs = engine.costBreakdown("vendas")
 ### Testing
 
 ```typescript
-import { simulate } from "@flowpilot/core"
+import { simulate } from "@talkgraph/core"
 
 const result = await simulate(vendas)
   .user("I want to buy something")
@@ -229,7 +229,7 @@ expect(result.errors).toHaveLength(0)
 ### Token Efficiency
 
 ```typescript
-import { TokenManager, ContextCompactor, ResultLimiter } from "@flowpilot/core"
+import { TokenManager, ContextCompactor, ResultLimiter } from "@talkgraph/core"
 
 // Budget tracking
 const tm = new TokenManager({
@@ -275,13 +275,13 @@ Developer API  →  Flow Compiler  →  Flow Runtime (async generator)
 
 | Package | Description | License |
 |---------|-------------|---------|
-| [`@flowpilot/core`](packages/core/) | Framework core — runtime, adapters, channels, tools, hooks | Apache 2.0 |
-| [`@flowpilot/analytics`](packages/analytics/) | Conversational analytics — funnels, bottlenecks, cost tracking | FSL-1.1-Apache-2.0 |
+| [`@talkgraph/core`](packages/core/) | Framework core — runtime, adapters, channels, tools, hooks | Apache 2.0 |
+| [`@talkgraph/analytics`](packages/analytics/) | Conversational analytics — funnels, bottlenecks, cost tracking | FSL-1.1-Apache-2.0 |
 
 ## License
 
-- **Core** (`@flowpilot/core`): [Apache 2.0](packages/core/LICENSE)
-- **Analytics** (`@flowpilot/analytics`): [FSL 1.1](packages/analytics/LICENSE) — converts to Apache 2.0 on 2028-04-02
+- **Core** (`@talkgraph/core`): [Apache 2.0](packages/core/LICENSE)
+- **Analytics** (`@talkgraph/analytics`): [FSL 1.1](packages/analytics/LICENSE) — converts to Apache 2.0 on 2028-04-02
 
 ---
 

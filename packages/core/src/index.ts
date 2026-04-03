@@ -1,7 +1,7 @@
 export { flow, when, FlowBuilder } from "./flow.js";
 export { compile } from "./compiler.js";
 export { runConversation } from "./runtime.js";
-export { createFlowPilot, FlowPilotApp } from "./app.js";
+export { createTalkGraph, TalkGraphApp } from "./app.js";
 export { ConversationContextImpl } from "./context.js";
 export { Conversation } from "./conversation.js";
 export type { ConversationConfig, ConversationStatus, ContextCompactionConfig } from "./conversation.js";

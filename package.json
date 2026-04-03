@@ -1,9 +1,9 @@
 {
-  "name": "flowpilot-monorepo",
+  "name": "talkgraph",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "FlowPilot — TypeScript framework for production-grade conversational chatbots",
+  "description": "TalkGraph — TypeScript framework for production-grade conversational chatbots",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",

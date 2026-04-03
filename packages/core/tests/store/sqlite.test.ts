@@ -116,7 +116,7 @@ describeIf("SQLiteStore (MemoryStore)", () => {
   });
 
   it("persists data across operations (close and reopen)", async () => {
-    const dbPath = join(tmpdir(), `flowpilot-test-${Date.now()}.db`);
+    const dbPath = join(tmpdir(), `talkgraph-test-${Date.now()}.db`);
 
     const store1 = new SQLiteStore({ path: dbPath });
     await store1.connect();

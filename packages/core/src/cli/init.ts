@@ -12,7 +12,7 @@ const DEFAULT_PACKAGE_JSON = (projectName: string) =>
         start: "node dist/bot.js",
       },
       dependencies: {
-        "@flowpilot/core": "^0.1.0",
+        "@talkgraph/core": "^0.1.0",
       },
       devDependencies: {
         typescript: "^5.0.0",
@@ -23,9 +23,9 @@ const DEFAULT_PACKAGE_JSON = (projectName: string) =>
     2
   );
 
-const DEFAULT_BOT_TS = `import { FlowPilot } from "@flowpilot/core";
+const DEFAULT_BOT_TS = `import { TalkGraph } from "@talkgraph/core";
 
-const bot = new FlowPilot({
+const bot = new TalkGraph({
   name: "my-bot",
   flows: [],
 });
@@ -33,9 +33,9 @@ const bot = new FlowPilot({
 bot.start();
 `;
 
-const VENDAS_BOT_TS = `import { FlowPilot } from "@flowpilot/core";
+const VENDAS_BOT_TS = `import { TalkGraph } from "@talkgraph/core";
 
-const bot = new FlowPilot({
+const bot = new TalkGraph({
   name: "sales-bot",
   flows: [
     {
@@ -99,7 +99,7 @@ export async function handleInit(
   fs.writeFileSync(path.join(targetDir, "tsconfig.json"), TSCONFIG_JSON);
 
   const templateLabel = template ? ` (template: ${template})` : "";
-  console.log(`FlowPilot project initialized${templateLabel}`);
+  console.log(`TalkGraph project initialized${templateLabel}`);
   console.log(`  Created: package.json`);
   console.log(`  Created: src/bot.ts`);
   console.log(`  Created: tsconfig.json`);

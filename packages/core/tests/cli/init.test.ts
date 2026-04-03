@@ -8,7 +8,7 @@ describe("handleInit", () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "flowpilot-test-"));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "talkgraph-test-"));
   });
 
   afterEach(() => {
@@ -44,12 +44,12 @@ describe("handleInit", () => {
     expect(() => JSON.parse(raw)).not.toThrow();
   });
 
-  it("generated package.json includes @flowpilot/core dependency", async () => {
+  it("generated package.json includes @talkgraph/core dependency", async () => {
     await handleInit({}, tmpDir);
 
     const pkgPath = path.join(tmpDir, "package.json");
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-    expect(pkg.dependencies).toHaveProperty("@flowpilot/core");
+    expect(pkg.dependencies).toHaveProperty("@talkgraph/core");
   });
 
   it("generated tsconfig.json is valid JSON", async () => {
@@ -65,7 +65,7 @@ describe("handleInit", () => {
 
     const botPath = path.join(tmpDir, "src", "bot.ts");
     const content = fs.readFileSync(botPath, "utf-8");
-    expect(content).toContain("@flowpilot/core");
+    expect(content).toContain("@talkgraph/core");
     expect(content).not.toContain("sales-bot");
   });
 

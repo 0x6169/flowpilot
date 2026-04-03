@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import type { ConversationStore, SessionSnapshot, MemoryItem } from "./types.js";
 
 interface SQLiteStoreConfig {
-  path?: string; // default: "./flowpilot.db"
+  path?: string; // default: "./talkgraph.db"
 }
 
 export class SQLiteStore implements ConversationStore {
@@ -11,7 +11,7 @@ export class SQLiteStore implements ConversationStore {
   private dbPath: string;
 
   constructor(config?: SQLiteStoreConfig) {
-    this.dbPath = config?.path ?? "./flowpilot.db";
+    this.dbPath = config?.path ?? "./talkgraph.db";
   }
 
   async connect(): Promise<void> {

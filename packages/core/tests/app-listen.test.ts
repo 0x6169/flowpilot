@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { createFlowPilot, flow } from "../src/index.js";
+import { createTalkGraph, flow } from "../src/index.js";
 import { z } from "zod";
 
-describe("FlowPilotApp.listen()", () => {
+describe("TalkGraphApp.listen()", () => {
   let cleanup: (() => Promise<void>) | null = null;
 
   afterEach(async () => {
@@ -13,7 +13,7 @@ describe("FlowPilotApp.listen()", () => {
     const port = 9500 + Math.floor(Math.random() * 100);
     const f = flow("test", { state: z.object({}) })
       .node("start", async (ctx) => ctx.reply("Hello!"));
-    const app = createFlowPilot({ flows: [f], api: { port } });
+    const app = createTalkGraph({ flows: [f], api: { port } });
     const handle = await app.listen();
     cleanup = () => handle.stop();
 
@@ -27,7 +27,7 @@ describe("FlowPilotApp.listen()", () => {
     const port = 9500 + Math.floor(Math.random() * 100);
     const f = flow("test", { state: z.object({}) })
       .node("start", async (ctx) => ctx.reply("Hello!"));
-    const app = createFlowPilot({ flows: [f], api: { port } });
+    const app = createTalkGraph({ flows: [f], api: { port } });
     const handle = await app.listen();
     expect(handle.stop).toBeDefined();
     await handle.stop();

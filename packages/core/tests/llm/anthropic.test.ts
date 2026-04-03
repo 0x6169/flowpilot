@@ -38,10 +38,10 @@ describe("AnthropicAdapter", () => {
     const adapter = new AnthropicAdapter({ apiKey: process.env.ANTHROPIC_API_KEY! });
     const result = await adapter.complete({
       model: "claude-haiku-4-5",
-      messages: [{ role: "user", content: "Say exactly: HELLO_FLOWPILOT" }],
+      messages: [{ role: "user", content: "Say exactly: HELLO_TALKGRAPH" }],
       maxTokens: 50,
     });
-    expect(result.content).toContain("HELLO_FLOWPILOT");
+    expect(result.content).toContain("HELLO_TALKGRAPH");
     expect(result.usage.totalTokens).toBeGreaterThan(0);
   });
 });

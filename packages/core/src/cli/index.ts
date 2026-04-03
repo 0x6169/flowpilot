@@ -36,13 +36,13 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
 export function formatHelp(): string {
   return `
-flowpilot — TypeScript framework for conversational chatbots
+talkgraph — TypeScript framework for conversational chatbots
 
 Usage:
-  npx flowpilot <command> [options]
+  npx talkgraph <command> [options]
 
 Commands:
-  init [--template <name>]    Scaffold a new FlowPilot project
+  init [--template <name>]    Scaffold a new TalkGraph project
   validate                    Validate all flows (cycles, orphan nodes, types)
   test                        Run flow simulation tests
   dev                         Start dev server with hot-reload

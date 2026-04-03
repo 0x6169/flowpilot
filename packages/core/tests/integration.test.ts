@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { flow, when, createFlowPilot, defineTool } from "../src/index.js";
+import { flow, when, createTalkGraph, defineTool } from "../src/index.js";
 import { z } from "zod";
 import type { FlowEvent } from "../src/index.js";
 
-describe("FlowPilot Integration", () => {
+describe("TalkGraph Integration", () => {
   it("runs a complete multi-node flow with state and edges", async () => {
     const myFlow = flow("greeting", {
       state: z.object({
@@ -29,7 +29,7 @@ describe("FlowPilot Integration", () => {
       .edge("welcome", "process")
       .edge("process", "farewell");
 
-    const app = createFlowPilot({ flows: [myFlow] });
+    const app = createTalkGraph({ flows: [myFlow] });
 
     const events: FlowEvent[] = [];
     for await (const event of app.run("greeting")) {
@@ -90,7 +90,7 @@ describe("FlowPilot Integration", () => {
       .edge("classify", "buy", when("buy"))
       .edge("classify", "support", when("support"));
 
-    const app = createFlowPilot({ flows: [myFlow] });
+    const app = createTalkGraph({ flows: [myFlow] });
 
     const events: FlowEvent[] = [];
     for await (const event of app.run("router")) {
@@ -108,12 +108,12 @@ describe("FlowPilot Integration", () => {
       .node("start", async (ctx) => ctx.reply("hi"));
     const f2 = flow("suporte", { state: z.object({}) })
       .node("start", async (ctx) => ctx.reply("hello"));
-    const app = createFlowPilot({ flows: [f1, f2] });
+    const app = createTalkGraph({ flows: [f1, f2] });
     expect(app.listFlows().sort()).toEqual(["suporte", "vendas"]);
   });
 
   it("throws on unknown flow name", () => {
-    const app = createFlowPilot({ flows: [] });
+    const app = createTalkGraph({ flows: [] });
     expect(() => app.run("ghost")).toThrow(/ghost/);
   });
 
@@ -129,7 +129,7 @@ describe("FlowPilot Integration", () => {
         };
       });
 
-    const app = createFlowPilot({ flows: [myFlow] });
+    const app = createTalkGraph({ flows: [myFlow] });
 
     const types: string[] = [];
     for await (const event of app.run("simple")) {

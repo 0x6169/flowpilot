@@ -35,7 +35,7 @@ describe("CLI", () => {
 
   it("formatHelp returns help text", () => {
     const help = formatHelp();
-    expect(help).toContain("flowpilot");
+    expect(help).toContain("talkgraph");
     expect(help).toContain("init");
     expect(help).toContain("validate");
     expect(help).toContain("test");

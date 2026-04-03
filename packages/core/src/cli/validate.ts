@@ -21,20 +21,20 @@ export async function handleValidate(targetDir: string = process.cwd()): Promise
   console.log("Validation: looking for flow definitions...");
 
   const tsFiles = findTsFiles(targetDir);
-  const flowpilotFiles = tsFiles.filter((file) => {
+  const talkgraphFiles = tsFiles.filter((file) => {
     try {
       const content = fs.readFileSync(file, "utf-8");
-      return content.includes("@flowpilot/core");
+      return content.includes("@talkgraph/core");
     } catch {
       return false;
     }
   });
 
-  if (flowpilotFiles.length === 0) {
-    console.log("No files importing from @flowpilot/core found.");
+  if (talkgraphFiles.length === 0) {
+    console.log("No files importing from @talkgraph/core found.");
   } else {
-    console.log(`Found ${flowpilotFiles.length} file(s) importing from @flowpilot/core:`);
-    for (const file of flowpilotFiles) {
+    console.log(`Found ${talkgraphFiles.length} file(s) importing from @talkgraph/core:`);
+    for (const file of talkgraphFiles) {
       console.log(`  ${path.relative(targetDir, file)}`);
     }
   }
