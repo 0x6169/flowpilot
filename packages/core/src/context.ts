@@ -105,6 +105,8 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
       systemPrompt,
     });
 
+    this.eventChannel?.push({ type: "llm:done", usage: response.usage });
+
     return response.content;
   }
 
@@ -125,6 +127,8 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
       messages: [{ role: "user", content: prompt }],
       systemPrompt,
     });
+
+    this.eventChannel?.push({ type: "llm:done", usage: response.usage });
 
     try {
       const parsed = JSON.parse(response.content);

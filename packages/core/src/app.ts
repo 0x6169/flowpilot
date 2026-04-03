@@ -2,6 +2,8 @@ import type { FlowEvent } from "./types.js";
 import type { LLMAdapter } from "./llm/types.js";
 import type { ToolDefinition } from "./tools/types.js";
 import type { ConversationStore } from "./store/types.js";
+import type { TokenManagerOptions } from "./tokens/manager.js";
+import type { ContextCompactionConfig } from "./conversation.js";
 import { compile } from "./compiler.js";
 import { runConversation } from "./runtime.js";
 import { FlowBuilder } from "./flow.js";
@@ -20,6 +22,8 @@ interface FlowPilotConfig {
   systemPrompt?: string;
   api?: { port: number };
   store?: ConversationStore;
+  tokenManager?: TokenManagerOptions;
+  compaction?: ContextCompactionConfig;
 }
 
 export class FlowPilotApp {
@@ -82,6 +86,8 @@ export class FlowPilotApp {
       systemPromptBuilder: this.globalSystemPrompt
         ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
         : undefined,
+      tokenManager: this.config_.tokenManager,
+      compaction: this.config_.compaction,
     });
   }
 

@@ -7,11 +7,20 @@ import type {
 import type { AdapterRegistry } from "./llm/registry.js";
 import type { SystemPromptBuilder } from "./llm/prompts.js";
 import type { ConversationStore, SessionSnapshot } from "./store/types.js";
+import type { TokenManagerOptions } from "./tokens/manager.js";
 import { StateManager } from "./state.js";
 import { ConversationContextImpl } from "./context.js";
 import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
 import { Scheduler } from "./scheduler.js";
+import { TokenManager } from "./tokens/manager.js";
+import { ContextCompactor } from "./tokens/compactor.js";
+
+export interface ContextCompactionConfig {
+  model: string;
+  preserveRecent?: number;
+  preserveSlots?: boolean;
+}
 
 export interface ConversationConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
@@ -21,6 +30,8 @@ export interface ConversationConfig {
   adapterRegistry?: AdapterRegistry;
   systemPromptBuilder?: SystemPromptBuilder;
   initialState?: Record<string, unknown>;
+  tokenManager?: TokenManagerOptions;
+  compaction?: ContextCompactionConfig;
 }
 
 export type ConversationStatus =
@@ -40,6 +51,8 @@ export class Conversation {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
   private readonly stateManager: StateManager<any>;
   private readonly eventChannel: EventChannel<FlowEvent>;
+  private readonly tokenManager?: TokenManager;
+  private readonly compactor?: ContextCompactor;
 
   private state: Record<string, unknown>;
   private currentNodeName: string | null;
@@ -73,10 +86,27 @@ export class Conversation {
     this.turn = 0;
     this.eventChannel = new EventChannel<FlowEvent>();
     this.scheduler = new Scheduler();
+
+    if (config.tokenManager) {
+      this.tokenManager = new TokenManager(config.tokenManager);
+    }
+
+    if (config.compaction && config.adapterRegistry) {
+      this.compactor = new ContextCompactor({
+        registry: config.adapterRegistry,
+        model: config.compaction.model,
+        preserveRecent: config.compaction.preserveRecent ?? 10,
+        preserveSlots: config.compaction.preserveSlots,
+      });
+    }
   }
 
   get status(): ConversationStatus {
     return this._status;
+  }
+
+  getTokenStats(): ReturnType<TokenManager["getStats"]> | null {
+    return this.tokenManager?.getStats() ?? null;
   }
 
   async *send(userMessage: string): AsyncGenerator<FlowEvent> {
@@ -174,6 +204,19 @@ export class Conversation {
         scheduler: this.scheduler,
       });
 
+      // Check budget before sending to LLM
+      if (this.tokenManager?.isBudgetExceeded() || this.tokenManager?.isCostExceeded()) {
+        this._status = "completed";
+        yield { type: "message", text: "[Token budget exceeded — conversation ended]" };
+        yield {
+          type: "flow:complete",
+          sessionId: this.sessionId,
+          finalState: { ...this.state },
+        };
+        await this.saveSnapshot();
+        return;
+      }
+
       // Start the handler
       let result: NodeResult;
       try {
@@ -214,6 +257,12 @@ export class Conversation {
         };
         return;
       }
+
+      // Update token counts from LLM events emitted during node execution
+      this.updateTokensFromChannel();
+
+      // Run context compaction if threshold reached
+      await this.runCompactionIfNeeded();
 
       // Process the result
       yield* this.processResult(result);
@@ -301,6 +350,12 @@ export class Conversation {
       // Handler completed
       const result = winner.result;
       this.handlerPromise = null;
+
+      // Update token counts from LLM events emitted during node execution
+      this.updateTokensFromChannel();
+
+      // Run context compaction if threshold reached
+      await this.runCompactionIfNeeded();
 
       // Drain any remaining events from the channel
       for (const event of this.eventChannel.drain()) {
@@ -391,6 +446,70 @@ export class Conversation {
     }
 
     return null;
+  }
+
+  /**
+   * Drain llm:done events from the channel and update the TokenManager.
+   * Other events remain for the caller to yield.
+   */
+  private updateTokensFromChannel(): void {
+    if (!this.tokenManager) return;
+    const pending = this.eventChannel.drain();
+    let totalFromThisDrain = 0;
+    for (const event of pending) {
+      if (event.type === "llm:done") {
+        this.tokenManager.addTokens(event.usage.totalTokens);
+        totalFromThisDrain += event.usage.totalTokens;
+        // Re-push the event so it is still yielded to consumers
+        this.eventChannel.push(event);
+      } else {
+        this.eventChannel.push(event);
+      }
+    }
+    if (totalFromThisDrain > 0) {
+      this.tokenManager.setCurrentTokens(
+        this.tokenManager.getStats().totalTokens,
+      );
+    }
+  }
+
+  /**
+   * Check compaction thresholds and run ContextCompactor if needed.
+   * No-op when compactor is not configured.
+   */
+  private async runCompactionIfNeeded(): Promise<void> {
+    if (!this.tokenManager || !this.compactor) return;
+    if (!this.tokenManager.canAttemptCompaction()) return;
+    if (!this.tokenManager.shouldMicroCompact() && !this.tokenManager.shouldFullCompact()) return;
+
+    try {
+      // Collect current conversation messages from state if available.
+      // The compactor operates on ConversationMessage[]; we read from state.messages
+      // when the flow state schema exposes a messages array.
+      const rawMessages = Array.isArray((this.state as Record<string, unknown>).messages)
+        ? (this.state as Record<string, unknown>).messages as Array<{ role: string; content: string }>
+        : [];
+
+      if (rawMessages.length === 0) return;
+
+      const messages = rawMessages.map((m) => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      }));
+
+      const compactionResult = await this.compactor.compact(messages);
+
+      if (compactionResult.compacted) {
+        this.tokenManager.recordCompactionSuccess();
+        this.tokenManager.setCurrentTokens(compactionResult.tokensAfter);
+        // Update state.messages with the compacted messages
+        this.state = this.stateManager.apply(this.state, {
+          messages: compactionResult.messages,
+        });
+      }
+    } catch {
+      this.tokenManager.recordCompactionFailure();
+    }
   }
 
   /**
