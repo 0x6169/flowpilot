@@ -5,6 +5,7 @@ import { CompileError } from "./errors.js";
 type Reducer = (current: unknown, update: unknown) => unknown;
 
 function getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod internal _def has no public type
   const def = (schema as any)._def;
   if (!def) return null;
 
@@ -28,6 +29,7 @@ function getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
 }
 
 function isArraySchema(schema: z.ZodType): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod internal _def has no public type
   const def = (schema as any)._def;
   if (!def) return false;
 

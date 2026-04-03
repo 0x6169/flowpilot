@@ -7,7 +7,6 @@ import type {
   NodeConfig,
   EdgeDefinition,
   EdgeCondition,
-  NodeResult,
 } from "./types.js";
 
 interface FlowOptions<S> {

@@ -13,6 +13,7 @@ import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
 
 export interface ConversationConfig {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
   compiled: CompiledFlow<any>;
   sessionId: string;
   store?: ConversationStore;
@@ -29,11 +30,13 @@ export type ConversationStatus =
   | "error";
 
 export class Conversation {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
   private readonly compiled: CompiledFlow<any>;
   private readonly sessionId: string;
   private readonly store?: ConversationStore;
   private readonly adapterRegistry?: AdapterRegistry;
   private readonly systemPromptBuilder?: SystemPromptBuilder;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
   private readonly stateManager: StateManager<any>;
   private readonly eventChannel: EventChannel<FlowEvent>;
 
@@ -57,6 +60,7 @@ export class Conversation {
 
     this.stateManager = new StateManager(
       config.compiled.stateSchema,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure at generic boundary
       config.compiled.reducers as any,
     );
     this.state = this.stateManager.apply(
@@ -130,14 +134,12 @@ export class Conversation {
       yield { type: "node:enter", node: this.currentNodeName, timestamp: Date.now() };
 
       // Set up prompt detection
-      let promptCalled = false;
       let promptResolveSignal: (() => void) | null = null;
       const promptDetectedPromise = new Promise<void>((resolve) => {
         promptResolveSignal = resolve;
       });
 
       const promptFn = (question: string, options?: Option[]): Promise<string> => {
-        promptCalled = true;
         this.pendingPromptQuestion = question;
         this.pendingPromptOptions = options;
 
@@ -234,12 +236,6 @@ export class Conversation {
    */
   private async *continueExecution(): AsyncGenerator<FlowEvent> {
     if (!this.handlerPromise) return;
-
-    // Set up prompt detection for the next potential prompt
-    let promptResolveSignal: (() => void) | null = null;
-    const promptDetectedPromise = new Promise<void>((resolve) => {
-      promptResolveSignal = resolve;
-    });
 
     // We need to intercept the next prompt call. But the handler already
     // has a reference to the old promptFn closure. The trick: our promptFn

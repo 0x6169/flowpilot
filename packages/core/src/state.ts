@@ -70,6 +70,7 @@ export class StateManager<S extends Record<string, unknown>> {
 
   private getShape(schema: z.ZodType): Record<string, z.ZodType> | null {
     // Zod 4 uses _def.type and _def.shape (not a function)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod internal _def has no public type
     const def = (schema as any)._def;
     if (!def) return null;
 
@@ -94,6 +95,7 @@ export class StateManager<S extends Record<string, unknown>> {
   }
 
   private isArraySchema(schema: z.ZodType): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod internal _def has no public type
     const def = (schema as any)._def;
     if (!def) return false;
 
