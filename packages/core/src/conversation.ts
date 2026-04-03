@@ -13,7 +13,7 @@ import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
 
 export interface ConversationConfig {
-  compiled: CompiledFlow<any>;
+  compiled: CompiledFlow;
   sessionId: string;
   store?: ConversationStore;
   adapterRegistry?: AdapterRegistry;
@@ -29,12 +29,12 @@ export type ConversationStatus =
   | "error";
 
 export class Conversation {
-  private readonly compiled: CompiledFlow<any>;
+  private readonly compiled: CompiledFlow;
   private readonly sessionId: string;
   private readonly store?: ConversationStore;
   private readonly adapterRegistry?: AdapterRegistry;
   private readonly systemPromptBuilder?: SystemPromptBuilder;
-  private readonly stateManager: StateManager<any>;
+  private readonly stateManager: StateManager<Record<string, unknown>>;
   private readonly eventChannel: EventChannel<FlowEvent>;
 
   private state: Record<string, unknown>;
@@ -57,7 +57,7 @@ export class Conversation {
 
     this.stateManager = new StateManager(
       config.compiled.stateSchema,
-      config.compiled.reducers as any,
+      config.compiled.reducers as Partial<Record<string, (current: unknown, update: unknown) => unknown>>,
     );
     this.state = this.stateManager.apply(
       this.stateManager.getInitialState(),
@@ -130,14 +130,12 @@ export class Conversation {
       yield { type: "node:enter", node: this.currentNodeName, timestamp: Date.now() };
 
       // Set up prompt detection
-      let promptCalled = false;
       let promptResolveSignal: (() => void) | null = null;
       const promptDetectedPromise = new Promise<void>((resolve) => {
         promptResolveSignal = resolve;
       });
 
       const promptFn = (question: string, options?: Option[]): Promise<string> => {
-        promptCalled = true;
         this.pendingPromptQuestion = question;
         this.pendingPromptOptions = options;
 
@@ -234,12 +232,6 @@ export class Conversation {
    */
   private async *continueExecution(): AsyncGenerator<FlowEvent> {
     if (!this.handlerPromise) return;
-
-    // Set up prompt detection for the next potential prompt
-    let promptResolveSignal: (() => void) | null = null;
-    const promptDetectedPromise = new Promise<void>((resolve) => {
-      promptResolveSignal = resolve;
-    });
 
     // We need to intercept the next prompt call. But the handler already
     // has a reference to the old promptFn closure. The trick: our promptFn

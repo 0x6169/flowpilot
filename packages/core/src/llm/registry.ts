@@ -20,7 +20,7 @@ export class AdapterRegistry {
   }
 
   resolveWithModel(providerModel: string): { adapter: LLMAdapter; model: string } {
-    const [provider, ...rest] = providerModel.split(":");
+    const [_provider, ...rest] = providerModel.split(":");
     const model = rest.join(":");
     return { adapter: this.resolve(providerModel), model };
   }

@@ -2,13 +2,22 @@
   "name": "flowpilot-monorepo",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "FlowPilot — TypeScript framework for production-grade conversational chatbots",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix"
   },
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "typescript-eslint": "^8.58.0"
   }
 }

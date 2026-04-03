@@ -12,7 +12,7 @@ import { SessionManager } from "./channels/session-manager.js";
 import { RestApiAdapter } from "./channels/rest-api.js";
 
 interface FlowPilotConfig {
-  flows: FlowBuilder<any>[];
+  flows: FlowBuilder<Record<string, unknown>>[];
   tools?: ToolDefinition[];
   adapters?: LLMAdapter[];
   defaultModel?: string;

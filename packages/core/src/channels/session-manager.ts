@@ -5,7 +5,7 @@ import type { ConversationStore } from "../store/types.js";
 import { Conversation } from "../conversation.js";
 
 export interface SessionManagerConfig {
-  compiledFlows: Map<string, CompiledFlow<any>>;
+  compiledFlows: Map<string, CompiledFlow>;
   adapterRegistry?: AdapterRegistry;
   systemPromptBuilder?: SystemPromptBuilder;
   store?: ConversationStore;
