@@ -19,6 +19,7 @@ export { OpenAICompatibleAdapter } from "./llm/openai-compatible.js";
 
 export { EventChannel } from "./event-channel.js";
 export { InMemoryStore } from "./store/memory-store.js";
+export { SQLiteStore, sqliteStore } from "./store/sqlite.js";
 export type { SessionSnapshot, PendingPrompt, ConversationStore, MemoryItem, MemoryStore } from "./store/types.js";
 
 export { SessionManager } from "./channels/session-manager.js";
