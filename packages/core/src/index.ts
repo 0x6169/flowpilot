@@ -37,6 +37,7 @@ export { TokenManager } from "./tokens/manager.js";
 
 export { FlowError, CompileError, RuntimeError, ToolError } from "./errors.js";
 export { END } from "./types.js";
+export { Scheduler, parseDelay } from "./scheduler.js";
 
 export type {
   FlowEvent,
@@ -58,6 +59,8 @@ export type {
   ConversationContext,
   TokenUsage,
   SlotDefinition,
+  ScheduleOptions,
+  ScheduleHandler,
 } from "./types.js";
 
 export type {

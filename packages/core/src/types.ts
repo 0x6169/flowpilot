@@ -144,6 +144,13 @@ export interface ConversationMessage {
   timestamp: number;
 }
 
+// ─── Scheduler ────────────────────────────────────────
+export interface ScheduleOptions {
+  cancelOnNodeExit?: boolean;
+}
+
+export type ScheduleHandler = () => void | Promise<void>;
+
 // ─── ConversationContext (interface only — implemented in context.ts)
 export interface ConversationContext<S = Record<string, unknown>> {
   state: Readonly<S>;
@@ -157,4 +164,5 @@ export interface ConversationContext<S = Record<string, unknown>> {
   prompt(question: string): Promise<string>;
   promptWithOptions(question: string, options: Option[], opts?: { natural?: boolean }): Promise<string>;
   fillSlots(schema: Record<string, SlotDefinition>): Promise<Record<string, unknown>>;
+  schedule(delay: string, handler: ScheduleHandler, opts?: ScheduleOptions): string;
 }

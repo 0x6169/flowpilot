@@ -1,8 +1,10 @@
-import type { ConversationContext, FlowEvent, NodeResult, Option, SlotDefinition } from "./types.js";
+import type { ConversationContext, FlowEvent, NodeResult, Option, ScheduleHandler, ScheduleOptions, SlotDefinition } from "./types.js";
 import type { StateManager } from "./state.js";
 import type { AdapterRegistry } from "./llm/registry.js";
 import type { SystemPromptBuilder } from "./llm/prompts.js";
 import type { EventChannel } from "./event-channel.js";
+import type { Scheduler } from "./scheduler.js";
+import { parseDelay } from "./scheduler.js";
 
 interface ContextInit<S extends Record<string, unknown>> {
   sessionId: string;
@@ -14,6 +16,7 @@ interface ContextInit<S extends Record<string, unknown>> {
   eventChannel?: EventChannel<FlowEvent>;
   promptFn?: (question: string, options?: Option[]) => Promise<string>;
   pendingStateUpdate?: Record<string, unknown>;
+  scheduler?: Scheduler;
 }
 
 export class ConversationContextImpl<S extends Record<string, unknown>>
@@ -28,6 +31,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
   private readonly eventChannel?: EventChannel<FlowEvent>;
   private readonly promptFn?: (question: string, options?: Option[]) => Promise<string>;
   private readonly pendingStateUpdate: Record<string, unknown>;
+  private readonly _scheduler?: Scheduler;
 
   constructor(init: ContextInit<S>) {
     this.sessionId = init.sessionId;
@@ -39,6 +43,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
     this.eventChannel = init.eventChannel;
     this.promptFn = init.promptFn;
     this.pendingStateUpdate = init.pendingStateUpdate ?? {};
+    this._scheduler = init.scheduler;
   }
 
   update(partial: Partial<S>): ConversationContext<S> {
@@ -58,6 +63,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
       eventChannel: this.eventChannel,
       promptFn: this.promptFn,
       pendingStateUpdate: mergedPending,
+      scheduler: this._scheduler,
     });
   }
 
@@ -203,5 +209,15 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
       }
     }
     return result;
+  }
+
+  schedule(delay: string, handler: ScheduleHandler, _opts?: ScheduleOptions): string {
+    if (!this._scheduler) {
+      throw new Error("schedule() requires a Scheduler. Ensure the Conversation passes a scheduler to the context.");
+    }
+    const delayMs = parseDelay(delay);
+    const id = `${this.sessionId}-${this.turn}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this._scheduler.schedule(id, delayMs, handler);
+    return id;
   }
 }

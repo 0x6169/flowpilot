@@ -11,6 +11,7 @@ import { StateManager } from "./state.js";
 import { ConversationContextImpl } from "./context.js";
 import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
+import { Scheduler } from "./scheduler.js";
 
 export interface ConversationConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type erasure: works with any flow state schema
@@ -44,6 +45,7 @@ export class Conversation {
   private currentNodeName: string | null;
   private turn: number;
   private _status: ConversationStatus = "idle";
+  private readonly scheduler: Scheduler;
 
   // Suspend/resume machinery
   private promptResolver: ((response: string) => void) | null = null;
@@ -70,6 +72,7 @@ export class Conversation {
     this.currentNodeName = config.compiled.entryNode;
     this.turn = 0;
     this.eventChannel = new EventChannel<FlowEvent>();
+    this.scheduler = new Scheduler();
   }
 
   get status(): ConversationStatus {
@@ -168,6 +171,7 @@ export class Conversation {
         systemPromptBuilder: this.systemPromptBuilder,
         eventChannel: this.eventChannel,
         promptFn,
+        scheduler: this.scheduler,
       });
 
       // Start the handler
@@ -220,6 +224,7 @@ export class Conversation {
 
     // Flow completed
     this._status = "completed";
+    this.scheduler.cancelAll();
     yield {
       type: "flow:complete",
       sessionId: this.sessionId,
@@ -314,6 +319,7 @@ export class Conversation {
         yield* this.runFromCurrentNode();
       } else {
         this._status = "completed";
+        this.scheduler.cancelAll();
         yield {
           type: "flow:complete",
           sessionId: this.sessionId,
