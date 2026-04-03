@@ -1,12 +1,15 @@
 import type { FlowEvent } from "./types.js";
 import type { LLMAdapter } from "./llm/types.js";
 import type { ToolDefinition } from "./tools/types.js";
+import type { ConversationStore } from "./store/types.js";
 import { compile } from "./compiler.js";
 import { runConversation } from "./runtime.js";
 import { FlowBuilder } from "./flow.js";
 import { AdapterRegistry } from "./llm/registry.js";
 import { SystemPromptBuilder } from "./llm/prompts.js";
 import { Conversation } from "./conversation.js";
+import { SessionManager } from "./channels/session-manager.js";
+import { RestApiAdapter } from "./channels/rest-api.js";
 
 interface FlowPilotConfig {
   flows: FlowBuilder<any>[];
@@ -14,6 +17,8 @@ interface FlowPilotConfig {
   adapters?: LLMAdapter[];
   defaultModel?: string;
   systemPrompt?: string;
+  api?: { port: number };
+  store?: ConversationStore;
 }
 
 export class FlowPilotApp {
@@ -21,8 +26,12 @@ export class FlowPilotApp {
   private readonly tools: Map<string, ToolDefinition>;
   private readonly registry: AdapterRegistry;
   private readonly globalSystemPrompt?: string;
+  private readonly config_: FlowPilotConfig;
+  private readonly store_?: ConversationStore;
 
   constructor(config: FlowPilotConfig) {
+    this.config_ = config;
+    this.store_ = config.store;
     this.flows = new Map();
     for (const builder of config.flows) {
       const def = builder.build();
@@ -73,6 +82,34 @@ export class FlowPilotApp {
         ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
         : undefined,
     });
+  }
+
+  async listen(): Promise<{ stop: () => Promise<void> }> {
+    const sessionManager = new SessionManager({
+      compiledFlows: this.flows,
+      adapterRegistry: this.registry.list().length > 0 ? this.registry : undefined,
+      systemPromptBuilder: this.globalSystemPrompt
+        ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
+        : undefined,
+      store: this.store_,
+    });
+
+    const toStop: Array<{ stop: () => Promise<void> }> = [];
+
+    if (this.config_.api) {
+      const restApi = new RestApiAdapter({
+        port: this.config_.api.port,
+        sessionManager,
+      });
+      await restApi.start();
+      toStop.push(restApi);
+    }
+
+    return {
+      stop: async () => {
+        for (const s of toStop) await s.stop();
+      },
+    };
   }
 
   listFlows(): string[] {

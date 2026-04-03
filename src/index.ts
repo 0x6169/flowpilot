@@ -21,6 +21,11 @@ export { EventChannel } from "./event-channel.js";
 export { InMemoryStore } from "./store/memory-store.js";
 export type { SessionSnapshot, PendingPrompt, ConversationStore, MemoryItem, MemoryStore } from "./store/types.js";
 
+export { SessionManager } from "./channels/session-manager.js";
+export { RestApiAdapter } from "./channels/rest-api.js";
+export { WebChatAdapter } from "./channels/webchat.js";
+export type { InboundMessage, OutboundMessage, ChannelCapabilities, ChannelAdapter, ChannelHandler } from "./channels/types.js";
+
 export { FlowError, CompileError, RuntimeError, ToolError } from "./errors.js";
 export { END } from "./types.js";
 
