@@ -21,7 +21,11 @@ export type FlowEvent =
   | { type: "prompt:send"; question: string; style: "natural" | "structured"; options?: Option[] }
   | { type: "prompt:reply"; response: string; responseTime: number }
   | { type: "slot:fill"; slot: string; value: unknown; attempts: number }
-  | { type: "slot:retry"; slot: string; attempt: number; error: string };
+  | { type: "slot:retry"; slot: string; attempt: number; error: string }
+  | { type: "background:start"; taskId: string; name: string }
+  | { type: "background:progress"; taskId: string; status: string }
+  | { type: "background:complete"; taskId: string; name: string; result: unknown }
+  | { type: "background:error"; taskId: string; name: string; error: string };
 
 export interface TokenUsage {
   inputTokens: number;
@@ -151,6 +155,22 @@ export interface ScheduleOptions {
 
 export type ScheduleHandler = () => void | Promise<void>;
 
+// ─── Background Tasks ─────────────────────────────────
+export interface BackgroundTaskConfig {
+  execute: (progress: BackgroundProgress) => Promise<unknown>;
+  onComplete?: (result: unknown) => { update?: Record<string, unknown>; goto?: string };
+  onError?: (error: Error) => { update?: Record<string, unknown>; goto?: string };
+}
+
+export interface BackgroundProgress {
+  update(status: string): void;
+}
+
+export interface BackgroundHandle {
+  id: string;
+  cancel(): void;
+}
+
 // ─── ConversationContext (interface only — implemented in context.ts)
 export interface ConversationContext<S = Record<string, unknown>> {
   state: Readonly<S>;
@@ -165,4 +185,5 @@ export interface ConversationContext<S = Record<string, unknown>> {
   promptWithOptions(question: string, options: Option[], opts?: { natural?: boolean }): Promise<string>;
   fillSlots(schema: Record<string, SlotDefinition>): Promise<Record<string, unknown>>;
   schedule(delay: string, handler: ScheduleHandler, opts?: ScheduleOptions): string;
+  background(name: string, config: BackgroundTaskConfig): BackgroundHandle;
 }

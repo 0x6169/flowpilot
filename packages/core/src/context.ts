@@ -1,10 +1,28 @@
-import type { ConversationContext, FlowEvent, NodeResult, Option, ScheduleHandler, ScheduleOptions, SlotDefinition } from "./types.js";
+import type {
+  BackgroundHandle,
+  BackgroundTaskConfig,
+  ConversationContext,
+  FlowEvent,
+  NodeResult,
+  Option,
+  ScheduleHandler,
+  ScheduleOptions,
+  SlotDefinition,
+} from "./types.js";
 import type { StateManager } from "./state.js";
 import type { AdapterRegistry } from "./llm/registry.js";
 import type { SystemPromptBuilder } from "./llm/prompts.js";
 import type { EventChannel } from "./event-channel.js";
 import type { Scheduler } from "./scheduler.js";
 import { parseDelay } from "./scheduler.js";
+
+export interface CompletedBackgroundTask {
+  id: string;
+  name: string;
+  result?: unknown;
+  error?: Error;
+  config: BackgroundTaskConfig;
+}
 
 interface ContextInit<S extends Record<string, unknown>> {
   sessionId: string;
@@ -17,6 +35,7 @@ interface ContextInit<S extends Record<string, unknown>> {
   promptFn?: (question: string, options?: Option[]) => Promise<string>;
   pendingStateUpdate?: Record<string, unknown>;
   scheduler?: Scheduler;
+  onBackgroundComplete?: (task: CompletedBackgroundTask) => void;
 }
 
 export class ConversationContextImpl<S extends Record<string, unknown>>
@@ -32,6 +51,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
   private readonly promptFn?: (question: string, options?: Option[]) => Promise<string>;
   private readonly pendingStateUpdate: Record<string, unknown>;
   private readonly _scheduler?: Scheduler;
+  private readonly onBackgroundComplete?: (task: CompletedBackgroundTask) => void;
 
   constructor(init: ContextInit<S>) {
     this.sessionId = init.sessionId;
@@ -44,6 +64,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
     this.promptFn = init.promptFn;
     this.pendingStateUpdate = init.pendingStateUpdate ?? {};
     this._scheduler = init.scheduler;
+    this.onBackgroundComplete = init.onBackgroundComplete;
   }
 
   update(partial: Partial<S>): ConversationContext<S> {
@@ -64,6 +85,7 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
       promptFn: this.promptFn,
       pendingStateUpdate: mergedPending,
       scheduler: this._scheduler,
+      onBackgroundComplete: this.onBackgroundComplete,
     });
   }
 
@@ -223,5 +245,42 @@ export class ConversationContextImpl<S extends Record<string, unknown>>
     const id = `${this.sessionId}-${this.turn}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._scheduler.schedule(id, delayMs, handler);
     return id;
+  }
+
+  background(name: string, config: BackgroundTaskConfig): BackgroundHandle {
+    const id = `bg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    let cancelled = false;
+
+    this.eventChannel?.push({ type: "background:start", taskId: id, name });
+
+    const progress = {
+      update: (status: string): void => {
+        if (!cancelled) {
+          this.eventChannel?.push({ type: "background:progress", taskId: id, status });
+        }
+      },
+    };
+
+    // Start the task without blocking — fire and forget
+    config.execute(progress).then(
+      (result) => {
+        if (cancelled) return;
+        this.eventChannel?.push({ type: "background:complete", taskId: id, name, result });
+        this.onBackgroundComplete?.({ id, name, result, config });
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        const error = err instanceof Error ? err : new Error(String(err));
+        this.eventChannel?.push({ type: "background:error", taskId: id, name, error: error.message });
+        this.onBackgroundComplete?.({ id, name, error, config });
+      },
+    );
+
+    return {
+      id,
+      cancel(): void {
+        cancelled = true;
+      },
+    };
   }
 }

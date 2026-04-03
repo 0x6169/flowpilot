@@ -9,7 +9,7 @@ import type { SystemPromptBuilder } from "./llm/prompts.js";
 import type { ConversationStore, SessionSnapshot } from "./store/types.js";
 import type { TokenManagerOptions } from "./tokens/manager.js";
 import { StateManager } from "./state.js";
-import { ConversationContextImpl } from "./context.js";
+import { ConversationContextImpl, type CompletedBackgroundTask } from "./context.js";
 import { EventChannel } from "./event-channel.js";
 import { RuntimeError } from "./errors.js";
 import { Scheduler } from "./scheduler.js";
@@ -65,6 +65,9 @@ export class Conversation {
   private handlerPromise: Promise<NodeResult> | null = null;
   private pendingPromptQuestion: string | null = null;
   private pendingPromptOptions: Option[] | undefined = undefined;
+
+  // Background task queue
+  private completedBackgroundTasks: CompletedBackgroundTask[] = [];
 
   constructor(config: ConversationConfig) {
     this.compiled = config.compiled;
@@ -202,6 +205,9 @@ export class Conversation {
         eventChannel: this.eventChannel,
         promptFn,
         scheduler: this.scheduler,
+        onBackgroundComplete: (task) => {
+          this.completedBackgroundTasks.push(task);
+        },
       });
 
       // Check budget before sending to LLM
@@ -261,14 +267,23 @@ export class Conversation {
       // Update token counts from LLM events emitted during node execution
       this.updateTokensFromChannel();
 
+      // Drain any events pushed to the channel during handler execution
+      for (const event of this.eventChannel.drain()) {
+        yield event;
+      }
+
       // Run context compaction if threshold reached
       await this.runCompactionIfNeeded();
 
       // Process the result
       yield* this.processResult(result);
 
-      // Resolve next node
-      this.currentNodeName = this.resolveNextNode(this.currentNodeName, result);
+      // Drain any completed background tasks and apply their redirects
+      const bgRedirect = yield* this.drainBackgroundTasks();
+
+      // Resolve next node (background redirect takes precedence over normal edge resolution)
+      const nextFromResult = this.resolveNextNode(this.currentNodeName, result);
+      this.currentNodeName = bgRedirect ?? nextFromResult;
     }
 
     // Flow completed
@@ -366,8 +381,11 @@ export class Conversation {
       const completedNode = this.currentNodeName!;
       yield* this.processResult(result);
 
-      // Resolve next node
-      this.currentNodeName = this.resolveNextNode(completedNode, result);
+      // Drain any completed background tasks and apply their redirects
+      const bgRedirect = yield* this.drainBackgroundTasks();
+
+      // Resolve next node (background redirect takes precedence)
+      this.currentNodeName = bgRedirect ?? this.resolveNextNode(completedNode, result);
 
       // Continue running subsequent nodes
       if (this.currentNodeName !== null) {
@@ -390,6 +408,36 @@ export class Conversation {
         recoverable: false,
       };
     }
+  }
+
+  /**
+   * Drain completed background tasks and apply their onComplete/onError redirects.
+   * Returns the goto node from the last task that specifies one, or null.
+   */
+  private *drainBackgroundTasks(): Generator<FlowEvent, string | null> {
+    let redirectTo: string | null = null;
+
+    while (this.completedBackgroundTasks.length > 0) {
+      const task = this.completedBackgroundTasks.shift()!;
+
+      let directive: { update?: Record<string, unknown>; goto?: string } | undefined;
+      if (task.error) {
+        directive = task.config.onError?.(task.error);
+      } else {
+        directive = task.config.onComplete?.(task.result);
+      }
+
+      if (directive?.update) {
+        this.state = this.stateManager.apply(this.state, directive.update);
+        yield { type: "state:update", patch: directive.update };
+      }
+
+      if (directive?.goto) {
+        redirectTo = directive.goto;
+      }
+    }
+
+    return redirectTo;
   }
 
   /**
