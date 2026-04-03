@@ -1,4 +1,4 @@
-import type { CompiledFlow } from "../types.js";
+import type { CompiledFlow, HookDefinition } from "../types.js";
 import type { AdapterRegistry } from "../llm/registry.js";
 import type { SystemPromptBuilder } from "../llm/prompts.js";
 import type { ConversationStore } from "../store/types.js";
@@ -10,6 +10,7 @@ export interface SessionManagerConfig {
   adapterRegistry?: AdapterRegistry;
   systemPromptBuilder?: SystemPromptBuilder;
   store?: ConversationStore;
+  hooks?: HookDefinition[];
 }
 
 export class SessionManager {
@@ -30,6 +31,7 @@ export class SessionManager {
       store: this.config.store,
       adapterRegistry: this.config.adapterRegistry,
       systemPromptBuilder: this.config.systemPromptBuilder,
+      hooks: this.config.hooks,
     });
     this.sessions.set(sessionId, conv);
     return conv;

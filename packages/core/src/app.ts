@@ -1,4 +1,4 @@
-import type { FlowEvent } from "./types.js";
+import type { FlowEvent, HookDefinition } from "./types.js";
 import type { LLMAdapter } from "./llm/types.js";
 import type { ToolDefinition } from "./tools/types.js";
 import type { ConversationStore } from "./store/types.js";
@@ -24,6 +24,7 @@ interface FlowPilotConfig {
   store?: ConversationStore;
   tokenManager?: TokenManagerOptions;
   compaction?: ContextCompactionConfig;
+  hooks?: HookDefinition[];
 }
 
 export class FlowPilotApp {
@@ -88,6 +89,7 @@ export class FlowPilotApp {
         : undefined,
       tokenManager: this.config_.tokenManager,
       compaction: this.config_.compaction,
+      hooks: this.config_.hooks,
     });
   }
 
@@ -99,6 +101,7 @@ export class FlowPilotApp {
         ? new SystemPromptBuilder({ global: this.globalSystemPrompt })
         : undefined,
       store: this.store_,
+      hooks: this.config_.hooks,
     });
 
     const toStop: Array<{ stop: () => Promise<void> }> = [];

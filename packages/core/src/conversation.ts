@@ -1,6 +1,7 @@
 import type {
   CompiledFlow,
   FlowEvent,
+  HookDefinition,
   NodeResult,
   Option,
 } from "./types.js";
@@ -15,6 +16,7 @@ import { RuntimeError } from "./errors.js";
 import { Scheduler } from "./scheduler.js";
 import { TokenManager } from "./tokens/manager.js";
 import { ContextCompactor } from "./tokens/compactor.js";
+import { HookRunner } from "./hooks/runner.js";
 
 export interface ContextCompactionConfig {
   model: string;
@@ -32,6 +34,7 @@ export interface ConversationConfig {
   initialState?: Record<string, unknown>;
   tokenManager?: TokenManagerOptions;
   compaction?: ContextCompactionConfig;
+  hooks?: HookDefinition[];
 }
 
 export type ConversationStatus =
@@ -53,6 +56,7 @@ export class Conversation {
   private readonly eventChannel: EventChannel<FlowEvent>;
   private readonly tokenManager?: TokenManager;
   private readonly compactor?: ContextCompactor;
+  private readonly hookRunner: HookRunner;
 
   private state: Record<string, unknown>;
   private currentNodeName: string | null;
@@ -102,6 +106,8 @@ export class Conversation {
         preserveSlots: config.compaction.preserveSlots,
       });
     }
+
+    this.hookRunner = new HookRunner(config.hooks ?? []);
   }
 
   get status(): ConversationStatus {
@@ -113,6 +119,21 @@ export class Conversation {
   }
 
   async *send(userMessage: string): AsyncGenerator<FlowEvent> {
+    // --- before:turn hook ---
+    const turnHookResult = await this.hookRunner.run("before:turn", { sessionId: this.sessionId, userMessage, turn: this.turn });
+    if (turnHookResult && "block" in turnHookResult) {
+      yield {
+        type: "error",
+        error: new RuntimeError(
+          `Turn blocked: ${turnHookResult.block}`,
+          this.sessionId,
+          this.currentNodeName ?? "",
+        ),
+        recoverable: true,
+      };
+      return;
+    }
+
     // --- Case 1: Resuming from a prompt ---
     if (this._status === "waiting_for_input" && this.promptResolver) {
       this._status = "running";
@@ -168,6 +189,18 @@ export class Conversation {
 
       this.turn++;
       yield { type: "node:enter", node: this.currentNodeName, timestamp: Date.now() };
+
+      // --- before:node hook ---
+      const beforeNodeResult = await this.hookRunner.run("before:node", { node: this.currentNodeName, sessionId: this.sessionId, state: this.state });
+      if (beforeNodeResult && "block" in beforeNodeResult) {
+        // Skip this node; resolve next node with a no-op result and continue
+        this.currentNodeName = this.resolveNextNode(this.currentNodeName, { type: "goto" });
+        continue;
+      }
+      if (beforeNodeResult && "redirect" in beforeNodeResult) {
+        this.currentNodeName = beforeNodeResult.redirect;
+        continue;
+      }
 
       // Set up prompt detection
       let promptResolveSignal: (() => void) | null = null;
@@ -254,6 +287,9 @@ export class Conversation {
         // Handler completed normally
         result = winner.result;
         this.handlerPromise = null;
+
+        // --- after:node hook ---
+        await this.hookRunner.run("after:node", { node: this.currentNodeName, sessionId: this.sessionId, result, state: this.state });
       } catch (err) {
         this._status = "error";
         yield {
